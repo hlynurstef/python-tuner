@@ -12,6 +12,8 @@
 import numpy as np
 import pyaudio
 import sys
+import audioop
+import math
 
 
 ######################################################################
@@ -89,7 +91,8 @@ while stream.is_active():
 
     # Shift the buffer down and new data in
     buf[:-FRAME_SIZE] = buf[FRAME_SIZE:]
-    buf[-FRAME_SIZE:] = np.frombuffer(stream.read(FRAME_SIZE), np.int16)
+    data = np.frombuffer(stream.read(FRAME_SIZE), np.int16)
+    buf[-FRAME_SIZE:] = data
 
     # Run the FFT on the windowed buffer
     fft = np.fft.rfft(buf * window)
@@ -104,7 +107,11 @@ while stream.is_active():
     # Console output once we have a full buffer
     num_frames += 1
 
-    if num_frames >= FRAMES_PER_FFT:
+    # Calculate the decibels
+    rms = audioop.rms(stream.read(FRAME_SIZE),2)
+    decibel = 20 * math.log10(rms)
+
+    if num_frames >= FRAMES_PER_FFT and decibel >= 20:
         pointer1 = list(border)
         pointer2 = list(border)
 
