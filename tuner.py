@@ -11,6 +11,8 @@
 
 import numpy as np
 import pyaudio
+import sys
+
 
 ######################################################################
 # Feel free to play with these numbers. Might want to change NOTE_MIN
@@ -35,7 +37,7 @@ FREQ_STEP = float(FSAMP)/SAMPLES_PER_FFT
 ######################################################################
 # For printing out notes
 
-NOTE_NAMES = 'C C# D D# E F F# G G# A A# B'.split()
+NOTE_NAMES = ['C ', 'C#', 'D ', 'D#', 'E ', 'F ', 'F#', 'G ', 'G#', 'A ', 'A#', 'B ']
 
 ######################################################################
 # These three functions are based upon this very useful webpage:
@@ -73,6 +75,15 @@ window = 0.5 * (1 - np.cos(np.linspace(0, 2*np.pi, SAMPLES_PER_FFT, False)))
 # Print initial text
 print('sampling at', FSAMP, 'Hz with max resolution of', FREQ_STEP, 'Hz')
 
+# ASCII GUI
+
+border = '+----------------------------------------------------------+'
+title =  '|                       PYTHON-TUNER                       |'
+notes =  '| C   C#    D   D#    E    F   F#    G   G#    A   A#    B |'
+cents =  '|  -0.5 -0.4 -0.3 -0.2 -0.1   0  +0.1 +0.2 +0.3 +0.4 +0.5  |'
+
+print(border + '\n' + title + '\n' + border + '\n' + notes)
+
 # As long as we are getting data:
 while stream.is_active():
 
@@ -94,5 +105,19 @@ while stream.is_active():
     num_frames += 1
 
     if num_frames >= FRAMES_PER_FFT:
-        print('freq: {:7.2f} Hz     note: {:>3s} {:+.2f}'.format(
-            freq, note_name(n0), n-n0))
+        pointer1 = list(border)
+        pointer2 = list(border)
+
+        pointer1[2+(n0%12)*5] = '^'
+        pointer2[int(30+(n-n0)*50)] = '^'
+
+        pointer1 = ''.join(pointer1)
+        pointer2 = ''.join(pointer2)
+
+        stats = '|  FREQ: {:7.2f} Hz       NOTE: {:>3s} {:+.2f}  |'.format(freq, note_name(n0), n-n0)
+        output = pointer1 + '\n' + cents + '\n' + pointer2 + '\n' + stats + '\n' + border  + '\n'
+        print(output)
+
+        for i in range(0,6):
+            sys.stdout.write("\033[F")
+
